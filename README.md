@@ -13,6 +13,16 @@ It runs nginx (UBI9) and serves a single page whose background color, message, a
 
 ## Build and run locally
 
+On Apple Silicon, target the cluster architecture (`linux/amd64` on ROSA) or the image will fail with `Exec format error`:
+
+```bash
+podman build --platform=linux/amd64 -t quay.io/csalinas/bgd:1.0.0 .
+# or: docker build --platform=linux/amd64 -t quay.io/csalinas/bgd:1.0.0 .
+podman push quay.io/csalinas/bgd:1.0.0
+```
+
+Local smoke test (native arch is fine):
+
 ```bash
 podman build -t bgd:local .
 podman run --rm -p 8080:8080 \
@@ -21,6 +31,8 @@ podman run --rm -p 8080:8080 \
 ```
 
 Open http://localhost:8080.
+
+Prefer building on the cluster (`make gitops-ci` in `osp-workbench/tekton-samples`) so the image matches OpenShift node architecture.
 
 ## Files
 
