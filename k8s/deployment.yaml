@@ -31,6 +31,18 @@ spec:
               value: "1.0.0"
             - name: GIT_COMMIT
               value: "__GIT_COMMIT__"
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 5
           resources: {}
           securityContext:
             allowPrivilegeEscalation: false

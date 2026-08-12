@@ -1,7 +1,5 @@
 # bgd
 
-[This change is what I need to make a pull request]
-
 Small demo web app for OpenShift GitOps / CI–CD labs.
 
 It runs nginx (UBI9) and serves a single page whose background color, message, and version come from environment variables — useful to show image or config changes after a pipeline push and Argo CD sync.
@@ -12,6 +10,14 @@ It runs nginx (UBI9) and serves a single page whose background color, message, a
 | `MESSAGE` | `GitOps Demo` | Headline text |
 | `APP_VERSION` | `1.0.0` | Shown as version |
 | `GIT_COMMIT` | `unknown` | Optional commit SHA |
+
+## Health endpoint
+
+The container exposes **`GET /health`** for liveness and readiness probes. It returns HTTP 200 when nginx is running.
+
+```bash
+curl -sf http://localhost:8080/health
+```
 
 ## Build and run locally
 
@@ -41,7 +47,9 @@ Prefer building on the cluster (`make gitops-ci` in `osp-workbench/tekton-sample
 | File | Role |
 | ---- | ---- |
 | `Dockerfile` | UBI nginx image, non-root user |
-| `entrypoint.sh` | Writes `index.html` from env, then starts nginx |
+| `entrypoint.sh` | Validates env, writes `index.html`, starts nginx |
+| `lib/` | Runtime env validation and HTML rendering helpers |
+| `nginx-health.conf` | Nginx snippet for the health endpoint |
 | `.tekton/` | Pipelines as Code — build + deploy on push/PR ([osp-workbench pac sample](https://github.com/carlos-salinas/osp-workbench/tree/main/tekton-samples/pac)) |
 | `k8s/` | Manifests applied to `pac-sample` by the PaC deploy step |
 

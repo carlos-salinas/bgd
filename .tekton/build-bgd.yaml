@@ -77,7 +77,7 @@ spec:
               cd "$(workspaces.manifest_dir.path)/k8s"
               sed -e "s|__IMAGE__|${IMG}|g" -e "s|__GIT_COMMIT__|${COMMIT}|g" deployment.yaml \
                 | oc apply -f - -n pac-sample
-              oc apply -f service.yaml -f route.yaml -n pac-sample
+              oc apply -f configmap.yaml -f service.yaml -f route.yaml -n pac-sample
               oc rollout status deployment/bgd -n pac-sample --timeout=180s
               oc get route bgd -n pac-sample -o jsonpath='https://{.spec.host}{"\n"}'
         workspaces:
