@@ -10,7 +10,29 @@ spec:
   serviceAccountName: pipeline
   pipelineSpec:
     tasks:
+      - name: fetch-source
+        taskRef:
+          resolver: cluster
+          params:
+            - name: kind
+              value: task
+            - name: name
+              value: git-clone
+            - name: namespace
+              value: openshift-pipelines
+        params:
+          - name: URL
+            value: "{{ repo_url }}"
+          - name: REVISION
+            value: "{{ revision }}"
+          - name: DELETE_EXISTING
+            value: "true"
+        workspaces:
+          - name: output
+            workspace: source
       - name: build-and-push
+        runAfter:
+          - fetch-source
         taskRef:
           resolver: cluster
           params:
