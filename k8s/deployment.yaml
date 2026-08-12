@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bgd
+  namespace: pac-sample
+  labels:
+    app: bgd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bgd
+  template:
+    metadata:
+      labels:
+        app: bgd
+    spec:
+      containers:
+        - name: bgd
+          image: __IMAGE__
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          env:
+            - name: BG_COLOR
+              value: "steelblue"
+            - name: MESSAGE
+              value: "OpenShift PaC Demo"
+            - name: APP_VERSION
+              value: "1.0.0"
+            - name: GIT_COMMIT
+              value: "__GIT_COMMIT__"
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault

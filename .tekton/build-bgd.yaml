@@ -1,0 +1,75 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  name: build-bgd
+  annotations:
+    pipelinesascode.tekton.dev/on-event: "[push, pull_request]"
+    pipelinesascode.tekton.dev/on-target-branch: "main"
+    pipelinesascode.tekton.dev/max-keep-runs: "5"
+spec:
+  serviceAccountName: pipeline
+  pipelineSpec:
+    tasks:
+      - name: build-and-push
+        taskRef:
+          resolver: cluster
+          params:
+            - name: kind
+              value: task
+            - name: name
+              value: buildah
+            - name: namespace
+              value: openshift-pipelines
+        params:
+          - name: IMAGE
+            value: "quay.io/csalinas/bgd:{{ revision }}"
+          - name: DOCKERFILE
+            value: Dockerfile
+          - name: CONTEXT
+            value: .
+          - name: TLS_VERIFY
+            value: "true"
+        workspaces:
+          - name: source
+            workspace: source
+          - name: dockerconfig
+            workspace: docker-credentials
+      - name: deploy
+        runAfter:
+          - build-and-push
+        taskRef:
+          resolver: cluster
+          params:
+            - name: kind
+              value: task
+            - name: name
+              value: openshift-client
+            - name: namespace
+              value: openshift-pipelines
+        params:
+          - name: SCRIPT
+            value: |
+              set -eu
+              IMG="$(tasks.build-and-push.results.IMAGE_URL)@$(tasks.build-and-push.results.IMAGE_DIGEST)"
+              COMMIT="{{ revision }}"
+              cd "$(workspaces.manifest-dir.path)/k8s"
+              sed -e "s|__IMAGE__|${IMG}|g" -e "s|__GIT_COMMIT__|${COMMIT}|g" deployment.yaml \
+                | oc apply -f - -n pac-sample
+              oc apply -f service.yaml -f route.yaml -n pac-sample
+              oc rollout status deployment/bgd -n pac-sample --timeout=180s
+              oc get route bgd -n pac-sample -o jsonpath='https://{.spec.host}{"\n"}'
+        workspaces:
+          - name: manifest-dir
+            workspace: source
+  workspaces:
+    - name: source
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+    - name: docker-credentials
+      secret:
+        secretName: docker-credentials

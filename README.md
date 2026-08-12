@@ -40,5 +40,7 @@ Prefer building on the cluster (`make gitops-ci` in `osp-workbench/tekton-sample
 | ---- | ---- |
 | `Dockerfile` | UBI nginx image, non-root user |
 | `entrypoint.sh` | Writes `index.html` from env, then starts nginx |
+| `.tekton/` | Pipelines as Code — build + deploy on push/PR ([osp-workbench pac sample](https://github.com/carlos-salinas/osp-workbench/tree/main/tekton-samples/pac)) |
+| `k8s/` | Manifests applied to `pac-sample` by the PaC deploy step |
 
-Deploy manifests for this app live in the GitOps repo (e.g. `my-app-gitops` → `bgd/base`), not in this repository.
+GitOps deploy manifests live in [my-app-gitops](https://github.com/carlos-salinas/my-app-gitops) (`bgd/overlays/lab`). PaC uses `k8s/` in this repo for the self-contained `pac-sample` demo.
