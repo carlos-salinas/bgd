@@ -1,5 +1,7 @@
 # bgd
 
+[This change is what I need to make a pull request]
+
 Small demo web app for OpenShift GitOps / CI–CD labs.
 
 It runs nginx (UBI9) and serves a single page whose background color, message, and version come from environment variables — useful to show image or config changes after a pipeline push and Argo CD sync.

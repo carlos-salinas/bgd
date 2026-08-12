@@ -10,7 +10,29 @@ spec:
   serviceAccountName: pipeline
   pipelineSpec:
     tasks:
+      - name: fetch-source
+        taskRef:
+          resolver: cluster
+          params:
+            - name: kind
+              value: task
+            - name: name
+              value: git-clone
+            - name: namespace
+              value: openshift-pipelines
+        params:
+          - name: URL
+            value: "{{ repo_url }}"
+          - name: REVISION
+            value: "{{ revision }}"
+          - name: DELETE_EXISTING
+            value: "true"
+        workspaces:
+          - name: output
+            workspace: source
       - name: build-and-push
+        runAfter:
+          - fetch-source
         taskRef:
           resolver: cluster
           params:
@@ -52,14 +74,14 @@ spec:
               set -eu
               IMG="$(tasks.build-and-push.results.IMAGE_URL)@$(tasks.build-and-push.results.IMAGE_DIGEST)"
               COMMIT="{{ revision }}"
-              cd "$(workspaces.manifest-dir.path)/k8s"
+              cd "$(workspaces.manifest_dir.path)/k8s"
               sed -e "s|__IMAGE__|${IMG}|g" -e "s|__GIT_COMMIT__|${COMMIT}|g" deployment.yaml \
                 | oc apply -f - -n pac-sample
               oc apply -f service.yaml -f route.yaml -n pac-sample
               oc rollout status deployment/bgd -n pac-sample --timeout=180s
               oc get route bgd -n pac-sample -o jsonpath='https://{.spec.host}{"\n"}'
         workspaces:
-          - name: manifest-dir
+          - name: manifest_dir
             workspace: source
   workspaces:
     - name: source
